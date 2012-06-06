@@ -349,7 +349,7 @@ public class GroovyShell extends GroovyObjectSupport {
     private Object runJUnit3Test(Class scriptClass) {
         try {
             Object testSuite = InvokerHelper.invokeConstructorOf("junit.framework.TestSuite", new Object[]{scriptClass});
-            return InvokerHelper.invokeStaticMethod("junit.textui.TestRunner", "run", new Object[]{testSuite});
+            return runJUnit3Suite(testSuite);
         } catch (ClassNotFoundException e) {
             throw new GroovyRuntimeException("Failed to run the unit test. JUnit is not on the Classpath.", e);
         }
@@ -366,10 +366,17 @@ public class GroovyShell extends GroovyObjectSupport {
     private Object runJUnit3TestSuite(Class scriptClass) {
         try {
             Object testSuite = InvokerHelper.invokeStaticMethod(scriptClass, "suite", new Object[]{});
-            return InvokerHelper.invokeStaticMethod("junit.textui.TestRunner", "run", new Object[]{testSuite});
+            return runJUnit3Suite(testSuite);
         } catch (ClassNotFoundException e) {
             throw new GroovyRuntimeException("Failed to run the unit test. JUnit is not on the Classpath.", e);
         }
+    }
+
+    private Object runJUnit3Suite(Object testSuite) throws ClassNotFoundException {
+        Object aTestRunner = InvokerHelper.invokeConstructorOf("junit.textui.TestRunner", new Object[0]);
+        Object aResultPrinter = InvokerHelper.invokeConstructorOf("org.codehaus.groovy.test.GroovyResultPrinter", new Object[0]);
+        InvokerHelper.invokeMethod(aTestRunner, "setPrinter", new Object[]{aResultPrinter});
+        return InvokerHelper.invokeMethod(aTestRunner, "doRun", new Object[]{testSuite, true});
     }
 
     private Object runJUnit4Test(Class scriptClass) {
