@@ -18,6 +18,7 @@ package groovy.transform;
 import java.lang.annotation.*;
 
 import org.codehaus.groovy.transform.GroovyASTTransformationClass;
+import org.codehaus.groovy.transform.stc.StaticTypeCheckingVisitor;
 import org.codehaus.groovy.transform.stc.TypeCheckerPluginFactory;
 
 /**
@@ -32,6 +33,7 @@ import org.codehaus.groovy.transform.stc.TypeCheckerPluginFactory;
 @GroovyASTTransformationClass("org.codehaus.groovy.transform.StaticTypesTransformation")
 public @interface TypeChecked {
     Class<? extends TypeCheckerPluginFactory> pluginFactory() default TypeCheckerPluginFactory.class;
+    Class<? extends StaticTypeCheckingVisitor> visitor() default StaticTypeCheckingVisitor.class;
     TypeCheckingMode value() default TypeCheckingMode.PASS;
 
     /**

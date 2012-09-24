@@ -29,6 +29,8 @@ import org.codehaus.groovy.syntax.SyntaxException;
 import org.codehaus.groovy.transform.stc.StaticTypeCheckingVisitor;
 import org.codehaus.groovy.transform.stc.TypeCheckerPluginFactory;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Collections;
 import java.util.Map;
 
@@ -44,7 +46,10 @@ public class StaticTypesTransformation implements ASTTransformation {
 
     public static final String STATIC_ERROR_PREFIX = "[Static type checking] - ";
 
+    private Class<? extends StaticTypeCheckingVisitor> visitorClass = null;
+
     //    @Override
+    @SuppressWarnings("unchecked")
     public void visit(ASTNode[] nodes, SourceUnit source) {
         AnnotationNode annotationInformation = (AnnotationNode) nodes[0];
         Map<String, Expression> members = annotationInformation.getMembers();
@@ -64,7 +69,16 @@ public class StaticTypesTransformation implements ASTTransformation {
                     }
                 }
             }
+            exp = members.get("visitor");
+            if (exp instanceof ClassExpression) {
+                ClassNode type = exp.getType();
+                Class clazz = type.getTypeClass();
+                if (StaticTypeCheckingVisitor.class.isAssignableFrom(clazz)) {
+                    visitorClass = clazz;
+                }
+            }
         }
+
         AnnotatedNode node = (AnnotatedNode) nodes[1];
         StaticTypeCheckingVisitor visitor = null;
         if (node instanceof ClassNode) {
@@ -94,7 +108,22 @@ public class StaticTypesTransformation implements ASTTransformation {
      * @return a static type checking visitor
      */
     protected StaticTypeCheckingVisitor newVisitor(SourceUnit unit, ClassNode node, TypeCheckerPluginFactory pluginFactory) {
-        return new StaticTypeCheckingVisitor(unit, node, pluginFactory);
+        if (visitorClass==null) {
+            return new StaticTypeCheckingVisitor(unit, node, pluginFactory);
+        } else {
+            try {
+                Constructor<? extends StaticTypeCheckingVisitor> constructor = visitorClass.getConstructor(SourceUnit.class, ClassNode.class, TypeCheckerPluginFactory.class);
+                return constructor.newInstance(unit, node, pluginFactory);
+            } catch (NoSuchMethodException e) {
+                throw new GroovyBugError("Unable to instantiate your custom type checking visitor. You don't seem to have a public 3-arg constructor.",e);
+            } catch (InstantiationException e) {
+                throw new GroovyBugError("Unable to instantiate your custom type checking visitor.",e);
+            } catch (IllegalAccessException e) {
+                throw new GroovyBugError("Unable to instantiate your custom type checking visitor.",e);
+            } catch (InvocationTargetException e) {
+                throw new GroovyBugError("Unable to instantiate your custom type checking visitor.",e);
+            }
+        }
     }
 
 }
