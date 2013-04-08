@@ -43,7 +43,7 @@ import java.util.Map;
 import static org.codehaus.groovy.transform.AbstractASTTransformUtil.*;
 
 /**
- * Handles generation of code for the @TupleConstructor annotation.
+ * Handles generation of code for the {@code @TupleConstructor} annotation.
  *
  * @author Paul King
  */
