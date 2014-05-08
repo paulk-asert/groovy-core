@@ -1,0 +1,9 @@
+ext {
+    commonsCliVersion = '1.2'
+}
+
+dependencies {
+    compile rootProject
+    compile "commons-cli:commons-cli:$commonsCliVersion"
+    testCompile project(':groovy-test')
+}
